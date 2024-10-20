@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication is Fun</title>
+    <style>
+        body {
+            text-align: center; 
+            background-color: rgb(255, 0, 93); 
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #authForm, #secretContent {
+            margin-top: 50px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #ffffff44;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: none;
+            background-color: #000;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        #secretContent h3, #secretContent h1 {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="authForm">
+        <h1>Okygen Bettİng Tips</h1>
+        <h2>Kayıt olabilirsiniz veya giriş yapıp hesabınızı silebilirsiniz</h2>
+        <input type="email" placeholder="Email" id="userEmail" required><br>
+        <input type="password" placeholder="Password" id="userPassword" required><br><br>
+        <button id="signUpButton">Kayıt Ol</button>
+        <button id="signInButton">Giriş Yap</button>
+    </div>
+
+    <div id="secretContent">
+        <h3>Bu bilgileri yalnızca giriş yaptıysanız görebilirsiniz</h3>
+        <h1>Gizli İçerik!</h1>
+        <button id="signOutButton">Çıkış Yap</button>
+        <button id="deleteAccountButton">Hesabı Sil</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut,
+            deleteUser
+        } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
+       
+       
+        const firebaseConfig = {
+    apiKey: "AIzaSyDUlNruDU2t6jnznqf_CAT85rEJ6Qe_kAk",
+    authDomain: "oxygen-6b822.firebaseapp.com",
+    projectId: "oxygen-6b822",
+    storageBucket: "oxygen-6b822.appspot.com",
+    messagingSenderId: "883096546595",
+    appId: "1:883096546595:web:c5e1949b8bd4a81c1f3096",
+    measurementId: "G-N4SPJC2ZGH"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const userEmail = document.querySelector("#userEmail");
+        const userPassword = document.querySelector("#userPassword");
+        const authForm = document.querySelector("#authForm");
+        const secretContent = document.querySelector("#secretContent");
+        const signUpButton = document.querySelector("#signUpButton");
+        const signInButton = document.querySelector("#signInButton");
+        const signOutButton = document.querySelector("#signOutButton");
+        const deleteAccountButton = document.querySelector("#deleteAccountButton");
+
+        secretContent.style.display = 'none';
+
+        
+        const userSignUp = async() => {
+            const signUpEmail = userEmail.value;
+            const signUpPassword = userPassword.value;
+            
+            if (signUpEmail === "" || signUpPassword === "") {
+                alert("Lütfen geçerli bir e-posta ve şifre girin.");
+                return;
+            }
+
+            createUserWithEmailAndPassword(auth, signUpEmail, signUpPassword)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+                alert("Hesabınız başarıyla oluşturuldu!");
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode + errorMessage);
+                alert(errorMessage);
+            });
+        }
+
+        
+        const userSignIn = async() => {
+            const signInEmail = userEmail.value;
+            const signInPassword = userPassword.value;
+
+            if (signInEmail === "" || signInPassword === "") {
+                alert("Lütfen geçerli bir e-posta ve şifre girin.");
+                return;
+            }
+
+            signInWithEmailAndPassword(auth, signInEmail, signInPassword)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                alert("Başarıyla giriş yaptınız!");
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode + errorMessage);
+                alert(errorMessage);
+            });
+        }
+
+      
+        const checkAuthState = async() => {
+            onAuthStateChanged(auth, (user) => {
+                if(user) {
+                    authForm.style.display = 'none';
+                    secretContent.style.display = 'block';
+                } else {
+                    authForm.style.display = 'block';
+                    secretContent.style.display = 'none';
+                }
+            });
+        }
+
+       
+        const userSignOut = async() => {
+            await signOut(auth);
+            alert("Başarıyla çıkış yaptınız.");
+        }
+
+        
+        const deleteAccount = async() => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await deleteUser(user);
+                    alert("Hesabınız başarıyla silindi!");
+                } catch (error) {
+                    console.error(error);
+                    alert("Hesabınızı silerken bir hata oluştu.");
+                }
+            } else {
+                alert("Hiçbir kullanıcı giriş yapmamış.");
+            }
+        }
+
+        checkAuthState();
+
+        signUpButton.addEventListener('click', userSignUp);
+        signInButton.addEventListener('click', userSignIn);
+        signOutButton.addEventListener('click', userSignOut);
+        deleteAccountButton.addEventListener('click', deleteAccount);
+    </script>
+</body>
+</html>
